@@ -1,4 +1,7 @@
-﻿# Données volumineuses (trop lourdes pour GitHub)
+﻿# Données (trop lourdes pour GitHub) : on garde seulement la structure des dossiers
+data/raw/*
+data/processed/*
+!data/**/.gitkeep
 *.csv
 *.parquet
 *.rar
