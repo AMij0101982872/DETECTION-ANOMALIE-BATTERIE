@@ -32,6 +32,8 @@ Données : 16,1 millions de mesures de charge, 20 véhicules BAIC EU500, juillet
 
 ## Répartition de l'équipe
 
+👉 **Le détail des tâches de chacun est dans [TACHE.md](TACHE.md).**
+
 | Membre | Branche | Rôle | Étapes | Fichiers |
 |---|---|---|---|---|
 | **1 — Kabre Yann Kevin** | `kevin` | Données | 2, 3, 5 | `data_loading.py`, `quality.py`, `cleaning.py`, `sessions.py` |
