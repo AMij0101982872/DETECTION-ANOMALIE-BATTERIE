@@ -1,8 +1,9 @@
-﻿# Données (trop lourdes pour GitHub) : on garde seulement la structure des dossiers
-data/raw/*
+# Données : seuls les 20 CSV bruts sont versionnés (via Git LFS, voir .gitattributes).
+# Les fichiers dérivés (parquet, dataset fusionné) se régénèrent avec : python main.py
 data/processed/*
 !data/**/.gitkeep
 *.csv
+!data/raw/*.csv
 *.parquet
 *.rar
 

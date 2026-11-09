@@ -47,7 +47,7 @@ Données : 16,1 millions de mesures de charge, 20 véhicules BAIC EU500, juillet
 
 ```
 Dataset_automobile/
-├── data/raw/              # #1.csv … #20.csv (non versionnés)
+├── data/raw/              # #1.csv … #20.csv (versionnés via Git LFS)
 ├── data/processed/        # parquet fusionné, nettoyé, sessions (non versionnés)
 ├── notebooks/             # exploration et présentation des résultats
 ├── src/
@@ -67,8 +67,8 @@ Dataset_automobile/
 ## Installation et utilisation
 
 ```bash
+git lfs install                     # une seule fois, avant le clone : télécharge les CSV de data/raw/
 pip install -r requirements.txt
-# copier #1.csv … #20.csv dans data/raw/
 
 python main.py                      # pipeline complet
 python -m src.quality               # rapport qualité par véhicule
