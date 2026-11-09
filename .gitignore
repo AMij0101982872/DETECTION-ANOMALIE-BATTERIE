@@ -18,3 +18,8 @@ venv/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Modèles entraînés et suivi MLflow (racine uniquement, pas src/models/)
+/models/
+mlruns/
+mlartifacts/

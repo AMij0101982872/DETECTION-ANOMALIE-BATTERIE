@@ -2,4 +2,11 @@ pandas>=2.0
 numpy
 pyarrow
 matplotlib
+seaborn
 jupyter
+scikit-learn
+xgboost
+mlflow
+streamlit
+evidently
+pytest
