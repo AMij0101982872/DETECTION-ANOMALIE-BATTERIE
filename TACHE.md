@@ -40,6 +40,16 @@ git pull origin main                  # récupérer ce que les autres ont déjà
 - Avant chaque Pull Request vers `main` : `python -m pytest` doit passer, et un autre membre relit.
 - Train/test **par véhicule** pour tous les modèles : `config.TEST_VEHICLES` = 17, 18, 19, 20 en test.
 
+## ⚠️ Décision en cours : seuil de la cellule
+
+Lire [DECISION_SEUIL_CELLULE.md](DECISION_SEUIL_CELLULE.md) et **voter** (A, B, C ou D).
+Les tâches marquées **🅳** ne s'appliquent que si l'**option D** est retenue : validation de l'indicateur « cellule » sur les **vraies pannes** du dataset Zhang et al. (*Nature Communications*, 2023, figshare `10.6084/m9.figshare.23659323`).
+
+Règles pour ce dataset :
+- Il va dans `data/external/` (**jamais sur GitHub**, 7 Go — dossier déjà dans `.gitignore`).
+- Les fichiers `.pkl` sont dangereux : **jamais** `pickle.load` ni `torch.load` directement, uniquement le lecteur restreint de `src/external_zhang.py`.
+- Il sert **uniquement pour la cellule** (la température n'y sépare pas les pannes) et on **ne le fusionne pas** avec les BAIC.
+
 ---
 
 ## 🟦 Kevin — Données (branche `kevin`)
@@ -63,6 +73,12 @@ git pull origin main                  # récupérer ce que les autres ont déjà
 | 15 premières minutes (modèle 2) | `temp_15min`, `vitesse_temp_15min`, `courant_moyen_15min`, `ecart_v_max_15min`, `soc_15min`, `session_longue` (vrai si la session dure plus de 15 min) |
 
 - [ ] Livrer **d'abord une version sur 2 véhicules** pour débloquer les autres, puis la version complète
+
+### 🅳 Dataset externe Zhang et al. (`src/external_zhang.py`)
+- [ ] Lecteur **sécurisé** des `.pkl` (unpickler restreint : `numpy` et `OrderedDict` uniquement, tout le reste refusé)
+- [ ] Lire les archives `battery_brand*.tar.gz` en flux (`tarfile`) sans tout décompresser
+- [ ] Produire `data/external/zhang_extraits.parquet`, **une ligne par extrait** : `marque`, `car`, `split`, `label`, `ecart_moy_mV`, `ecart_max_mV`, `temp_max`, `dtemp`, `courant_moy`, `soc_debut`
+- [ ] Un test : le lecteur refuse un pickle qui appelle une fonction interdite
 
 ### Ensuite
 - [ ] Aider Ivan Jr sur le tuning des modèles et l'analyse des erreurs
@@ -89,6 +105,8 @@ git pull origin main                  # récupérer ce que les autres ont déjà
 - [ ] Page « Véhicule » : historique des sessions avec le niveau 🟢 / 🟠 / 🔴, filtres par période
 - [ ] Détail d'une session : quelles approches ont voté anomalie, et pourquoi
 - [ ] Commencer avec des **votes fictifs**, brancher les vrais résultats ensuite
+- [ ] 🅳 Page « Validation sur vraies pannes » : écart de tension des véhicules en panne vs normaux (Zhang), AUROC, rappel de la règle 60/100 mV
+- [ ] 🅳 (options C et D) Page « Véhicule 9 » : évolution de son écart de tension dans le temps
 
 **Livrables :** graphiques, étiquettes pour le modèle 2, fusion par vote, dashboard.
 
@@ -115,7 +133,15 @@ git pull origin main                  # récupérer ce que les autres ont déjà
 - [ ] Métriques : précision, rappel, F1, matrice de confusion — **le rappel est prioritaire**
 - [ ] Ajuster le seuil de probabilité pour favoriser le rappel
 
-**Livrable :** tableau des 10 modèles, meilleur modèle par cible, importance des variables (graphique).
+> Options C et D : le modèle 2 **cellule** est retiré (90 % des cas viennent du véhicule 9) → **8 entraînements** au lieu de 10.
+
+### 🅳 Cellule sur vraies pannes (`src/models/cellule_zhang.py`)
+- [ ] Entrée : `data/external/zhang_extraits.parquet` (Kevin), agrégé **par véhicule** (écart moyen, 99e percentile, max)
+- [ ] Évaluer notre règle (alerte 60 mV / critique 100 mV) : rappel, précision, AUROC
+- [ ] Classifieur Random Forest / XGBoost sur les vraies étiquettes, séparation **par véhicule** (`train_label.csv` / `test_label.csv`)
+- [ ] Signaler les limites : étiquettes par véhicule, véhicules en panne avec ≈ 6× moins d'extraits, seuils non transférables aux BAIC
+
+**Livrable :** tableau des modèles, meilleur modèle par cible, importance des variables (graphique) + 🅳 résultats de validation sur vraies pannes.
 
 ---
 
@@ -137,6 +163,8 @@ git pull origin main                  # récupérer ce que les autres ont déjà
 ### Étape 9 — CI/CD et monitoring
 - [ ] `.github/workflows/ci.yml` : à chaque push → installation → `pytest` → build Docker
 - [ ] Bonus **Evidently** : rapport de dérive entre 2019-2020 et 2021 sur `temp_max` et `ecart_v_max`
+- [ ] 🅳 Suivre dans MLflow l'expérience « cellule_zhang » d'Ivan Jr
+- [ ] 🅳 Isolation Forest : vérifier qu'il repère bien le véhicule 9
 
 **Livrables :** modèle 3 évalué, MLflow, Docker, CI GitHub Actions.
 
@@ -149,6 +177,7 @@ Kevin ───── sessions_features.parquet ─────► Ivan Jr, Stev
 Mohamed ─── étiquettes (seuils) ───────────► Ivan Jr (modèle 2)
 Stevy ───── log_run MLflow ────────────────► Ivan Jr
 Ivan Jr + Stevy + Mohamed ── votes ────────► Mohamed (fusion + dashboard)
+🅳 Kevin ── zhang_extraits.parquet ────────► Ivan Jr (cellule_zhang) ──► Mohamed (page validation)
 ```
 
 ## Ordre de travail

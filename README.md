@@ -30,6 +30,21 @@ Données : 16,1 millions de mesures de charge, 20 véhicules BAIC EU500, juillet
 | Modèle 3 : Atypique — « cette charge est bizarre » | Non supervisé | Isolation Forest | `src/models/isolation_forest.py` |
 | **Fusion** : 0-1 vote normal · 2 à surveiller · 3-4 critique | — | — | `src/models/fusion.py` |
 
+## ⚠️ Décision en cours : seuil de la cellule défaillante
+
+Avec 0,1 V, **aucune** session BAIC n'est une cellule défaillante. Les options (A, B, C, D) et le vote sont dans **[DECISION_SEUIL_CELLULE.md](DECISION_SEUIL_CELLULE.md)**.
+
+**Option D** (proposée) : seuils à deux niveaux sur les BAIC (alerte 60 mV / critique 100 mV) + **validation sur de vraies pannes** avec le dataset public Zhang et al. (*Nature Communications*, 2023) : 347 véhicules, 55 en panne confirmée. Premier résultat : l'écart de tension moyen sépare les véhicules en panne (85 mV) des normaux (20 mV), AUROC 0,84.
+
+## Données externes (option D)
+
+| | |
+|---|---|
+| Source | Zhang et al., 2023 — figshare `10.6084/m9.figshare.23659323` |
+| Emplacement | `data/external/` (**non versionné**, 7 Go) |
+| Lecture | `src/external_zhang.py` uniquement (lecteur sécurisé : **jamais** `pickle.load` / `torch.load`) |
+| Usage | Valider l'indicateur « cellule » — pas la surchauffe, pas de fusion avec les BAIC |
+
 ## Répartition de l'équipe
 
 👉 **Le détail des tâches de chacun est dans [TACHE.md](TACHE.md).**
@@ -51,6 +66,7 @@ Données : 16,1 millions de mesures de charge, 20 véhicules BAIC EU500, juillet
 Dataset_automobile/
 ├── data/raw/              # #1.csv … #20.csv (versionnés via Git LFS)
 ├── data/processed/        # parquet fusionné, nettoyé, sessions (non versionnés)
+├── data/external/         # dataset Zhang et al. (option D, non versionné)
 ├── notebooks/             # exploration et présentation des résultats
 ├── src/
 │   ├── config.py          # chemins, seuils, paramètres
