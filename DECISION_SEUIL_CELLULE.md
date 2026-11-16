@@ -76,6 +76,57 @@ Et, pour la cellule, **pas de modèle 2** :
 - ✅ **Le véhicule 9 devient un résultat** : « le système a repéré un véhicule dont une cellule se déséquilibre ». À montrer dans le dashboard, avec l'évolution de son écart de tension dans le temps.
 - ⚠️ La fusion par vote doit s'adapter : 3 votes pour la cellule (2 votes ou plus = critique ?).
 
+### Option D : option C + validation sur de vraies pannes (dataset Zhang et al.) — PROPOSÉE PAR IVAN JR
+
+**L'idée :** notre limite principale est qu'on n'a **aucune vraie panne** dans les données BAIC. Un dataset public en contient : **Zhang et al., *Nature Communications*, 2023** (figshare `10.6084/m9.figshare.23659323`).
+
+| | Nos BAIC | Zhang et al. |
+|---|---|---|
+| Véhicules | 20 (1 marque) | 347 (3 marques), dont **55 en panne confirmée** |
+| Unité | Session complète | Extrait de 128 mesures (10 s, ≈ 21 min) |
+| Étiquettes | Aucune (fabriquées par seuils) | **Vraies pannes**, par véhicule (0/1) |
+| Colonnes | tension pack, courant, SOC, cellule max/min, temp max/min | `volt` (normalisée), `current`, `soc`, `max_single_volt`, `min_single_volt`, `max_temp`, `min_temp`, `timestamp` |
+
+**Premiers résultats (marque 1, 32 véhicules de test, 15 en panne, 60 100 extraits) :**
+
+| Indicateur (par véhicule) | Normaux | En panne | AUROC |
+|---|---|---|---|
+| Écart de tension moyen | 20 mV | **85 mV** | **0,84** |
+| Écart de tension (99e percentile) | 57 mV | **255 mV** | **0,83** |
+| Écart de tension maximal | 142 mV | 293 mV | 0,67 |
+| Température maximale | 45,0 °C | 41,7 °C | 0,20 |
+
+> AUROC : 0,5 = hasard, 1 = séparation parfaite. Résultats complets sur les 198 véhicules de la marque 1 : _en cours de calcul, à ajouter_.
+
+**Ce que ça montre :**
+1. ✅ **L'écart entre cellules détecte bien de vraies pannes** → notre indicateur « cellule » est validé.
+2. ✅ Il vaut mieux regarder l'écart **moyen ou au 99e percentile** que le maximum (un pic isolé n'est pas une panne).
+3. ❌ **La température ne sépare pas** les véhicules en panne → Zhang n'aide pas pour la surchauffe (on garde 45/48 °C sur les BAIC).
+4. ⚠️ Les **seuils ne se transfèrent pas** tels quels (écart normal ≈ 20 mV chez Zhang, médiane 41 mV par session chez nous) → on ne fusionne pas les deux datasets.
+5. ⚠️ Étiquettes **par véhicule** (un véhicule en panne a aussi des extraits normaux) et véhicules en panne avec ≈ 6× moins d'extraits : à mentionner comme limite.
+
+**Concrètement, l'option D =**
+
+| | Surchauffe | Cellule |
+|---|---|---|
+| Données BAIC | Seuils 45/48 °C + 4 approches + vote (inchangé) | Option C : alerte 60 mV / critique 100 mV, pas de modèle 2, véhicule 9 = résultat |
+| Données Zhang | — | **Validation** : rappel/AUROC de notre règle + petit classifieur entraîné sur les vraies étiquettes |
+
+- ✅ Respecte le rapport (9 étapes, 4 approches, vote).
+- ✅ Répond honnêtement à « sans étiquettes de panne » : on **valide** nos indicateurs sur de vraies pannes publiées.
+- ✅ Argument fort devant le jury.
+- ⚠️ Un peu plus de travail (voir tableau ci-dessous).
+
+**Travail en plus si l'option D est retenue :**
+
+| Qui | Tâche |
+|---|---|
+| Kevin | `src/external_zhang.py` : lecture **sécurisée** des `.pkl` (jamais `pickle.load` / `torch.load` directement, unpickler restreint à numpy) → un parquet d'indicateurs par extrait |
+| Ivan Jr | `src/models/cellule_zhang.py` : évaluer la règle 60/100 mV + classifieur (Random Forest / XGBoost) sur les vraies étiquettes, séparation par véhicule |
+| Mohamed | Une page « validation sur vraies pannes » dans le dashboard |
+| Stevy | Suivre l'expérience dans MLflow |
+| Tous | Données dans `data/external/` (**non versionné**, 7 Go) — chacun télécharge depuis figshare |
+
 ## 5. Ce qui change si l'option C est retenue
 
 | Qui | Changement |
@@ -89,11 +140,11 @@ Et, pour la cellule, **pas de modèle 2** :
 
 ## 6. Vote
 
-Chacun écrit son choix (A, B ou C) et un commentaire s'il le souhaite, puis fait un commit.
+Chacun écrit son choix (A, B, C ou D) et un commentaire s'il le souhaite, puis fait un commit.
 
 | Membre | Choix | Commentaire |
 |---|---|---|
-| Mobio Ivan Junior | | |
+| Mobio Ivan Junior | **D** | Valide notre indicateur cellule sur de vraies pannes (Zhang et al.) |
 | Traore Mohamed | | |
 | Kabre Yann Kevin | | |
 | Gatsoundou Junior Stevy | | |

@@ -24,3 +24,6 @@ Thumbs.db
 /models/
 mlruns/
 mlartifacts/
+
+# Dataset externe Zhang et al. (7 Go, jamais versionné)
+data/external/
