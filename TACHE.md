@@ -16,12 +16,11 @@ Chaque membre retrouve ici **ce qu'il doit faire**, **sur quelle branche** et **
 
 | Ordre | Qui | Action | Pourquoi |
 |---|---|---|---|
-| **1** | **Tous** | Lire [DECISION_SEUIL_CELLULE.md](DECISION_SEUIL_CELLULE.md) et **voter** (A, B, C ou D) | Le seuil cellule change le travail de Mohamed et d'Ivan Jr |
-| **2** | **Kevin** | Ouvrir la **Pull Request `kevin` → `main`** (nettoyage + sessions, 11 tests OK) | **Débloque tout le monde** : les sessions ne sont pas encore sur `main` |
-| **3** | **Tous** | Après le merge : `git pull origin main` puis `python main.py` | Crée `data/processed/sessions_features.parquet` chez chacun |
-| **4** | **Chacun** | Sa première tâche ci-dessous (⭐) | — |
+| **1** | **Kevin** | Ouvrir la **Pull Request `kevin` → `main`** (nettoyage + sessions, 11 tests OK) | **Débloque tout le monde** : les sessions ne sont pas encore sur `main` |
+| **2** | **Tous** | Après le merge : `git pull origin main` puis `python main.py` | Crée `data/processed/sessions_features.parquet` chez chacun |
+| **3** | **Chacun** | Sa première tâche ci-dessous (⭐) | — |
 
-> En attendant le vote, on travaille avec l'**option D** (proposée) : seuils cellule à deux niveaux (alerte 60 mV / critique 100 mV), **pas de modèle 2 pour la cellule**, validation sur les vraies pannes de Zhang. Les tâches marquées **🅳** en dépendent.
+> ✅ **Décision prise : option D** ([DECISION_SEUIL_CELLULE.md](DECISION_SEUIL_CELLULE.md)) : seuils cellule à deux niveaux (alerte 60 mV / critique 100 mV), **pas de modèle 2 pour la cellule**, validation sur les vraies pannes de Zhang. Les tâches marquées **🅳** viennent de cette décision.
 
 ---
 
@@ -194,7 +193,7 @@ Ivan Jr ─── résultats cellule_zhang ────────────�
 
 | Phase | Kevin | Mohamed | Ivan Jr | Stevy |
 |---|---|---|---|---|
-| **1. Maintenant** | PR `kevin` → `main`, sessions > 12 h | Analyse exploratoire, vote du seuil | Validation cellule sur Zhang | MLflow (`log_run`), Docker, CI |
+| **1. Maintenant** | PR `kevin` → `main`, sessions > 12 h | Analyse exploratoire | Validation cellule sur Zhang | MLflow (`log_run`), Docker, CI |
 | **2. Sessions sur `main`** | `external_zhang.py`, aide Ivan Jr | Vote des seuils, `label_surchauffe`, début dashboard | Modèles 1 et 2 (8 entraînements) | Isolation Forest + anomalies simulées |
 | **3. Intégration** | Rapport (données) | Fusion des votes, dashboard final | Rapport + choix des modèles | Registry MLflow, Docker final, Evidently |
 

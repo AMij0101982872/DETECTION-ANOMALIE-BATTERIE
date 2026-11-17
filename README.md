@@ -44,7 +44,7 @@ Projet 3pH · PIC — Filière Big Data & IA, HESTIM (2026-2027)
 | **Fusion par vote** | — | 0-1 normal · 2 à surveiller · 3-4 critique | 3 votes ¹ | `src/models/fusion.py` |
 | Validation sur vraies pannes (Zhang) | Supervisé | — | ✅ ¹ | `src/models/cellule_zhang.py` |
 
-¹ Selon la **[décision sur le seuil de la cellule](DECISION_SEUIL_CELLULE.md)** (options C/D) : à 0,1 V aucune session BAIC n'est anormale, et 90 % des cas à 60 mV viennent du véhicule 9 → pas de modèle 2 pour la cellule. **Chacun doit voter dans ce document.**
+¹ **[Décision sur le seuil de la cellule](DECISION_SEUIL_CELLULE.md) : option D retenue.** À 0,1 V aucune session BAIC n'est anormale, et 90 % des cas à 60 mV viennent du véhicule 9 → deux niveaux (alerte 60 mV / critique 100 mV), pas de modèle 2 pour la cellule, validation sur les vraies pannes de Zhang.
 
 **Résultat clé (Zhang) :** l'écart de tension moyen sépare les véhicules en panne des normaux — AUROC **0,77** (marque 1), **0,90** (marque 2), 0,57 (marque 3). Règle « écart moyen > 40 mV » : 53 % des pannes détectées pour 3 % de fausses alertes. → Utiliser l'écart **moyen**, pas le maximum.
 

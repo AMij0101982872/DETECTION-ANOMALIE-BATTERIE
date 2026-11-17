@@ -1,7 +1,7 @@
 # Décision à prendre : seuil de la cellule défaillante
 
-> **Statut : EN ATTENTE DE DÉCISION**. Chacun lit, puis vote en bas du document.
-> Tant que ce n'est pas tranché, Mohamed (vote des seuils) et Ivan Jr (modèle 2) ne peuvent pas finaliser leur partie.
+> **Statut : ✅ DÉCIDÉ — option D retenue par l'équipe (17/11/2026).**
+> Seuils cellule à deux niveaux (alerte 60 mV / critique 100 mV), pas de modèle 2 pour la cellule, validation sur les vraies pannes du dataset Zhang et al. Les tâches qui en découlent sont dans [TACHE.md](TACHE.md).
 
 ---
 
@@ -76,7 +76,7 @@ Et, pour la cellule, **pas de modèle 2** :
 - ✅ **Le véhicule 9 devient un résultat** : « le système a repéré un véhicule dont une cellule se déséquilibre ». À montrer dans le dashboard, avec l'évolution de son écart de tension dans le temps.
 - ⚠️ La fusion par vote doit s'adapter : 3 votes pour la cellule (2 votes ou plus = critique ?).
 
-### Option D : option C + validation sur de vraies pannes (dataset Zhang et al.) — PROPOSÉE PAR IVAN JR
+### Option D : option C + validation sur de vraies pannes (dataset Zhang et al.) — ✅ RETENUE
 
 **L'idée :** notre limite principale est qu'on n'a **aucune vraie panne** dans les données BAIC. Un dataset public en contient : **Zhang et al., *Nature Communications*, 2023** (figshare `10.6084/m9.figshare.23659323`).
 
@@ -159,7 +159,7 @@ Et, pour la cellule, **pas de modèle 2** :
 
 ## 6. Vote
 
-Chacun écrit son choix (A, B, C ou D) et un commentaire s'il le souhaite, puis fait un commit.
+Vote clos : l'équipe a retenu l'option D.
 
 | Membre | Choix | Commentaire |
 |---|---|---|
@@ -168,4 +168,4 @@ Chacun écrit son choix (A, B, C ou D) et un commentaire s'il le souhaite, puis 
 | Kabre Yann Kevin | | |
 | Gatsoundou Junior Stevy | | |
 
-**Décision finale :** _à compléter_
+**Décision finale : option D** (17/11/2026) — option C sur les BAIC (alerte 60 mV / critique 100 mV, pas de modèle 2 cellule, véhicule 9 présenté comme un résultat) + validation de l'indicateur cellule sur les vraies pannes de Zhang et al.
