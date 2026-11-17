@@ -98,7 +98,17 @@ Et, pour la cellule, **pas de modèle 2** :
 
 > AUROC : 0,5 = hasard, 1 = séparation parfaite. Sur les 32 véhicules de test seuls : 0,84 (écart moyen), 0,83 (99e percentile).
 
-**Une règle simple sur l'écart moyen par véhicule :**
+**Par marque (écart moyen par véhicule) :**
+
+| Marque | Véhicules | En panne | Normaux | En panne | AUROC |
+|---|---|---|---|---|---|
+| 1 | 198 | 30 | 20 mV | 63 mV | 0,77 |
+| 2 | 49 | 16 | 18 mV | 55 mV | **0,90** |
+| 3 | 100 | 9 | 28 mV | 31 mV | 0,57 |
+
+→ Ça marche très bien sur les marques 1 et 2, **pas sur la marque 3** (ses pannes ne sont pas des déséquilibres de cellule). Total : 700 582 extraits, 347 véhicules, 55 en panne (conforme à l'article).
+
+**Une règle simple sur l'écart moyen par véhicule (marque 1) :**
 
 | Règle | Véhicules en panne détectés | Véhicules normaux signalés à tort |
 |---|---|---|

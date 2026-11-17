@@ -75,9 +75,8 @@ Règles pour ce dataset :
 - [ ] Livrer **d'abord une version sur 2 véhicules** pour débloquer les autres, puis la version complète
 
 ### 🅳 Dataset externe Zhang et al. (`src/external_zhang.py`)
-- [ ] Lecteur **sécurisé** des `.pkl` (unpickler restreint : `numpy` et `OrderedDict` uniquement, tout le reste refusé)
-- [ ] Lire les archives `battery_brand*.tar.gz` en flux (`tarfile`) sans tout décompresser
-- [ ] Produire `data/external/zhang_extraits.parquet`, **une ligne par extrait** : `marque`, `car`, `split`, `label`, `ecart_moy_mV`, `ecart_max_mV`, `temp_max`, `dtemp`, `courant_moy`, `soc_debut`
+- [x] `data/external/zhang_extraits.parquet` déjà produit (700 582 extraits, 347 véhicules, 55 en panne) → partagé sur le Drive
+- [ ] Intégrer le script d'export dans `src/external_zhang.py` (lecteur **sécurisé** : `numpy` et `OrderedDict` uniquement), pour que le fichier soit reproductible
 - [ ] Un test : le lecteur refuse un pickle qui appelle une fonction interdite
 
 ### Ensuite

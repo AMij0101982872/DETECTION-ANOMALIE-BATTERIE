@@ -41,9 +41,17 @@ Avec 0,1 V, **aucune** session BAIC n'est une cellule défaillante. Les options 
 | | |
 |---|---|
 | Source | Zhang et al., 2023 — figshare `10.6084/m9.figshare.23659323` |
-| Emplacement | `data/external/` (**non versionné**, 7 Go) |
-| Lecture | `src/external_zhang.py` uniquement (lecteur sécurisé : **jamais** `pickle.load` / `torch.load`) |
+| Fichier à utiliser | **`data/external/zhang_extraits.parquet`** (10,6 Mo, **non versionné**) → à récupérer sur le Drive de l'équipe et à copier dans `data/external/` |
+| Contenu | 700 582 extraits (1 ligne = 1 extrait de 128 mesures), **347 véhicules dont 55 en panne**, 3 marques |
+| Colonnes | `marque`, `split`, `car`, `label` (1 = panne), `ecart_moy_mV`, `ecart_max_mV`, `temp_max`, `dtemp`, `courant_moy`, `soc_debut` |
+| Données brutes | 7 Go de `.pkl` : **inutile de les télécharger**. Si besoin, lecture uniquement avec le lecteur sécurisé (**jamais** `pickle.load` / `torch.load`) |
 | Usage | Valider l'indicateur « cellule » — pas la surchauffe, pas de fusion avec les BAIC |
+
+```python
+import pandas as pd
+z = pd.read_parquet("data/external/zhang_extraits.parquet")
+vehicules = z.groupby(["marque", "car"], observed=True).agg(label=("label", "first"), ecart_moy=("ecart_moy_mV", "mean"))
+```
 
 ## Répartition de l'équipe
 
