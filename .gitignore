@@ -24,3 +24,9 @@ Thumbs.db
 /models/
 mlruns/
 mlartifacts/
+
+# Dataset externe Zhang et al. : les 7 Go de .pkl ne sont jamais versionnés,
+# seul le résumé zhang_extraits.parquet (10 Mo, licence CC BY 4.0) l'est.
+data/external/*
+!data/external/zhang_extraits.parquet
+!data/external/LISEZMOI.md
