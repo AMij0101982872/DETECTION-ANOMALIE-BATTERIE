@@ -23,10 +23,11 @@ Thumbs.db
 # Modèles entraînés et suivi MLflow (racine uniquement, pas src/models/)
 /models/
 mlruns/
-mlartifacts/
+/mlartifacts/
 
 # Dataset externe Zhang et al. : les 7 Go de .pkl ne sont jamais versionnés,
 # seul le résumé zhang_extraits.parquet (10 Mo, licence CC BY 4.0) l'est.
 data/external/*
 !data/external/zhang_extraits.parquet
 !data/external/LISEZMOI.md
+/mlflow.db

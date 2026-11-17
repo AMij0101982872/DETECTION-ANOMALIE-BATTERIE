@@ -1,0 +1,46 @@
+# Étape 9 — Intégration continue (membre 4) : à chaque push et Pull Request
+# installation → tests (pytest) → construction de l'image Docker.
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        # Les CSV (Git LFS, ~1 Go) ne sont pas nécessaires : les tests utilisent des données
+        # synthétiques. lfs: false évite de consommer le quota LFS du dépôt.
+        with:
+          lfs: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Installation
+        run: pip install -r requirements.txt
+
+      - name: Tests
+        run: python -m pytest -v
+
+  docker:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: docker/setup-buildx-action@v3
+      - name: Construction de l'image du dashboard
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: batterie-dashboard:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
