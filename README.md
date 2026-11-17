@@ -34,7 +34,7 @@ Données : 16,1 millions de mesures de charge, 20 véhicules BAIC EU500, juillet
 
 Avec 0,1 V, **aucune** session BAIC n'est une cellule défaillante. Les options (A, B, C, D) et le vote sont dans **[DECISION_SEUIL_CELLULE.md](DECISION_SEUIL_CELLULE.md)**.
 
-**Option D** (proposée) : seuils à deux niveaux sur les BAIC (alerte 60 mV / critique 100 mV) + **validation sur de vraies pannes** avec le dataset public Zhang et al. (*Nature Communications*, 2023) : 347 véhicules, 55 en panne confirmée. Premier résultat : l'écart de tension moyen sépare les véhicules en panne (85 mV) des normaux (20 mV), AUROC 0,84.
+**Option D** (proposée) : seuils à deux niveaux sur les BAIC (alerte 60 mV / critique 100 mV) + **validation sur de vraies pannes** avec le dataset public Zhang et al. (*Nature Communications*, 2023) : 347 véhicules, 55 en panne confirmée. Résultat sur la marque 1 (198 véhicules, 30 en panne) : l'écart de tension moyen sépare les véhicules en panne (63 mV) des normaux (20 mV), AUROC 0,77 ; une alerte « écart moyen > 40 mV » détecte 53 % des pannes avec seulement 3 % de fausses alertes.
 
 ## Données externes (option D)
 

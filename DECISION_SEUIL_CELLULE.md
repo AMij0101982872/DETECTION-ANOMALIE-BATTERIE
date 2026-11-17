@@ -87,23 +87,32 @@ Et, pour la cellule, **pas de modèle 2** :
 | Étiquettes | Aucune (fabriquées par seuils) | **Vraies pannes**, par véhicule (0/1) |
 | Colonnes | tension pack, courant, SOC, cellule max/min, temp max/min | `volt` (normalisée), `current`, `soc`, `max_single_volt`, `min_single_volt`, `max_temp`, `min_temp`, `timestamp` |
 
-**Premiers résultats (marque 1, 32 véhicules de test, 15 en panne, 60 100 extraits) :**
+**Résultats (marque 1 complète : 198 véhicules, 30 en panne, 476 739 extraits) :**
 
 | Indicateur (par véhicule) | Normaux | En panne | AUROC |
 |---|---|---|---|
-| Écart de tension moyen | 20 mV | **85 mV** | **0,84** |
-| Écart de tension (99e percentile) | 57 mV | **255 mV** | **0,83** |
-| Écart de tension maximal | 142 mV | 293 mV | 0,67 |
-| Température maximale | 45,0 °C | 41,7 °C | 0,20 |
+| Écart de tension moyen | 20 mV | **63 mV** | **0,77** |
+| Écart de tension (99e percentile) | 59 mV | **235 mV** | **0,79** |
+| Écart de tension maximal | 145 mV | 283 mV | 0,65 |
+| Température maximale | 45,1 °C | 41,9 °C | 0,23 |
 
-> AUROC : 0,5 = hasard, 1 = séparation parfaite. Résultats complets sur les 198 véhicules de la marque 1 : _en cours de calcul, à ajouter_.
+> AUROC : 0,5 = hasard, 1 = séparation parfaite. Sur les 32 véhicules de test seuls : 0,84 (écart moyen), 0,83 (99e percentile).
+
+**Une règle simple sur l'écart moyen par véhicule :**
+
+| Règle | Véhicules en panne détectés | Véhicules normaux signalés à tort |
+|---|---|---|
+| Écart moyen > 30 mV | 17 / 30 (57 %) | 8 / 168 (5 %) |
+| Écart moyen > 40 mV | 16 / 30 (53 %) | 5 / 168 (3 %) |
+| Écart **maximal** > 60 mV (pour comparer) | 18 / 30 (60 %) | **75 / 168 (45 %)** |
 
 **Ce que ça montre :**
-1. ✅ **L'écart entre cellules détecte bien de vraies pannes** → notre indicateur « cellule » est validé.
-2. ✅ Il vaut mieux regarder l'écart **moyen ou au 99e percentile** que le maximum (un pic isolé n'est pas une panne).
-3. ❌ **La température ne sépare pas** les véhicules en panne → Zhang n'aide pas pour la surchauffe (on garde 45/48 °C sur les BAIC).
-4. ⚠️ Les **seuils ne se transfèrent pas** tels quels (écart normal ≈ 20 mV chez Zhang, médiane 41 mV par session chez nous) → on ne fusionne pas les deux datasets.
-5. ⚠️ Étiquettes **par véhicule** (un véhicule en panne a aussi des extraits normaux) et véhicules en panne avec ≈ 6× moins d'extraits : à mentionner comme limite.
+1. ✅ **L'écart entre cellules détecte bien de vraies pannes** → notre indicateur « cellule » est validé : environ la moitié des véhicules en panne, avec très peu de fausses alertes.
+2. ✅ Il faut regarder l'écart **moyen (ou au 99e percentile)**, pas le maximum : avec le maximum, près d'un véhicule normal sur deux est signalé (un pic isolé n'est pas une panne). → **À appliquer aussi aux BAIC** : alerte sur `ecart_v_moyen` plutôt que sur `ecart_v_max`.
+3. ⚠️ Environ **13 véhicules en panne sur 30 n'ont aucun déséquilibre de cellule** : leur panne est d'un autre type. L'écart de tension ne détecte pas tout — d'où l'intérêt de combiner plusieurs approches (vote).
+4. ❌ **La température ne sépare pas** les véhicules en panne → Zhang n'aide pas pour la surchauffe (on garde 45/48 °C sur les BAIC).
+5. ⚠️ Les **seuils ne se transfèrent pas** tels quels (écart normal ≈ 20 mV chez Zhang, médiane 41 mV par session chez nous) → on ne fusionne pas les deux datasets.
+6. ⚠️ Étiquettes **par véhicule** (un véhicule en panne a aussi des extraits normaux) et véhicules en panne avec ≈ 6× moins d'extraits : à mentionner comme limite.
 
 **Concrètement, l'option D =**
 
