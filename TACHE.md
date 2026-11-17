@@ -5,10 +5,23 @@ Chaque membre retrouve ici **ce qu'il doit faire**, **sur quelle branche** et **
 
 | Membre | Branche | Rôle | Étapes du rapport |
 |---|---|---|---|
-| Kabre Yann Kevin | `kevin` | Données | 3, 5 |
+| Kabre Yann Kevin | `kevin` | Données | 2, 3, 5 |
 | Traore Mohamed | `MOHAMED` | Analyse, seuils, vote, dashboard | 4, 8 |
-| Mobio Ivan Junior | `IVANJR` | ML supervisé (modèles 1 et 2) | 6 |
+| Mobio Ivan Junior | `IVANJR` | ML supervisé (modèles 1, 2, validation Zhang) | 6 |
 | Gatsoundou Junior Stevy | `STEVY` | Isolation Forest et MLOps | 6, 7, 9 |
+
+---
+
+## 🚀 Par où commencer (maintenant)
+
+| Ordre | Qui | Action | Pourquoi |
+|---|---|---|---|
+| **1** | **Tous** | Lire [DECISION_SEUIL_CELLULE.md](DECISION_SEUIL_CELLULE.md) et **voter** (A, B, C ou D) | Le seuil cellule change le travail de Mohamed et d'Ivan Jr |
+| **2** | **Kevin** | Ouvrir la **Pull Request `kevin` → `main`** (nettoyage + sessions, 11 tests OK) | **Débloque tout le monde** : les sessions ne sont pas encore sur `main` |
+| **3** | **Tous** | Après le merge : `git pull origin main` puis `python main.py` | Crée `data/processed/sessions_features.parquet` chez chacun |
+| **4** | **Chacun** | Sa première tâche ci-dessous (⭐) | — |
+
+> En attendant le vote, on travaille avec l'**option D** (proposée) : seuils cellule à deux niveaux (alerte 60 mV / critique 100 mV), **pas de modèle 2 pour la cellule**, validation sur les vraies pannes de Zhang. Les tâches marquées **🅳** en dépendent.
 
 ---
 
@@ -19,8 +32,9 @@ git lfs install                       # une seule fois, pour télécharger les C
 git clone https://github.com/AMij0101982872/DETECTION-ANOMALIE-BATTERIE.git
 cd DETECTION-ANOMALIE-BATTERIE
 git checkout <ma-branche>             # kevin, MOHAMED, IVANJR ou STEVY
+git pull origin main                  # dernier état commun (docs, dataset Zhang, sessions après merge)
 pip install -r requirements.txt
-python -m src.data_loading            # crée data/processed/dataset_batterie.parquet
+python main.py                        # fusion → nettoyage → sessions (data/processed/)
 ```
 
 Travail au quotidien :
@@ -39,109 +53,105 @@ git pull origin main                  # récupérer ce que les autres ont déjà
 - Le **format des fichiers échangés** (voir chaque section) est un contrat : si on le change, on prévient.
 - Avant chaque Pull Request vers `main` : `python -m pytest` doit passer, et un autre membre relit.
 - Train/test **par véhicule** pour tous les modèles : `config.TEST_VEHICLES` = 17, 18, 19, 20 en test.
+- Classes déséquilibrées (~1 %) : **pas d'accuracy** ; rappel, F1, PR-AUC, `class_weight="balanced"`.
 
-## ⚠️ Décision en cours : seuil de la cellule
+## Les deux datasets
 
-Lire [DECISION_SEUIL_CELLULE.md](DECISION_SEUIL_CELLULE.md) et **voter** (A, B, C ou D).
-Les tâches marquées **🅳** ne s'appliquent que si l'**option D** est retenue : validation de l'indicateur « cellule » sur les **vraies pannes** du dataset Zhang et al. (*Nature Communications*, 2023, figshare `10.6084/m9.figshare.23659323`).
+| | BAIC (`data/raw/`) | Zhang et al. (`data/external/zhang_extraits.parquet`) |
+|---|---|---|
+| Rôle | **Tout le projet** (surchauffe + cellule) | **Validation** de l'indicateur cellule sur de vraies pannes |
+| Une ligne | une session de charge (après étape 5) | un extrait de 21 min |
+| Étiquettes | aucune (fabriquées par les seuils) | `label` = 1 si véhicule en panne réelle |
 
-Règles pour ce dataset :
-- Le résumé **`data/external/zhang_extraits.parquet`** (10 Mo) est **dans le dépôt** : `git pull origin main` suffit. Les données brutes (7 Go de `.pkl`) ne vont **jamais** sur GitHub.
-- Licence CC BY 4.0 : **citer Zhang et al. 2023** (voir `data/external/LISEZMOI.md`).
-- Les fichiers `.pkl` sont dangereux : **jamais** `pickle.load` ni `torch.load` directement, uniquement le lecteur restreint de `src/external_zhang.py`.
-- Il sert **uniquement pour la cellule** (la température n'y sépare pas les pannes) et on **ne le fusionne pas** avec les BAIC.
+- On **ne fusionne pas** les deux datasets (unités, marques et capteurs différents).
+- Zhang : **cellule uniquement** (la température n'y sépare pas les pannes). Utiliser l'écart **moyen**, pas le maximum.
+- Licence CC BY 4.0 : **citer Zhang et al. 2023** (voir `data/external/LISEZMOI.md`). Les 7 Go de `.pkl` bruts ne vont **jamais** sur GitHub, et ne s'ouvrent **jamais** avec `pickle.load` / `torch.load`.
 
 ---
 
 ## 🟦 Kevin — Données (branche `kevin`)
 
-> **Priorité du projet : tous les modèles attendent ton étape 5.**
+### Étapes 3 et 5 — ✅ faites sur ta branche
+- [x] Nettoyage : comptage par type d'erreur + tests (`src/cleaning.py`, `tests/test_cleaning.py`)
+- [x] Sessions et features : 22 colonnes, `sessions_features.parquet` (`src/sessions.py`, `tests/test_sessions.py`)
+- [ ] ⭐ **Ouvrir la Pull Request `kevin` → `main`** (priorité n° 1 du projet)
+- [ ] Vérifier les 16 sessions de plus de 12 h (jusqu'à 65 h) : vraie charge ou deux sessions collées ?
+- [ ] Compléter le Table 4 du rapport (lignes retirées par type d'erreur)
 
-### Étape 3 — Valider le nettoyage (`src/cleaning.py`)
-- [ ] Lancer `python -m src.data_loading` puis `python -m src.cleaning`
-- [ ] Compter les lignes retirées par type d'erreur (doublons, 0 V, −400 A) et compléter le Table 4 du rapport
-- [ ] Ajouter un test dans `tests/` pour le cas −400 A
-
-### Étape 5 — Sessions et features (`src/sessions.py`)
-- [ ] `ajouter_session_id(df)` : nouvelle session si plus de 10 min entre deux mesures **ou** si le véhicule change (~30 000 sessions attendues)
-- [ ] Écarter les sessions trop courtes (ex. moins de 10 mesures) et documenter ce choix
-- [ ] `features_par_session(df)` → `data/processed/sessions_features.parquet`, **une ligne par session**, avec exactement ces colonnes :
+**Contrat de `sessions_features.parquet`** (une ligne par session) :
 
 | Groupe | Colonnes |
 |---|---|
 | Identité | `vehicle_id`, `session_id`, `debut`, `fin`, `mois`, `nb_mesures` |
 | Session complète | `duree_min`, `soc_debut`, `soc_fin`, `courant_moyen`, `courant_max` (valeur absolue), `temp_debut`, `temp_max`, `vitesse_temp` (°C/min), `ecart_v_moyen`, `ecart_v_max` |
-| 15 premières minutes (modèle 2) | `temp_15min`, `vitesse_temp_15min`, `courant_moyen_15min`, `ecart_v_max_15min`, `soc_15min`, `session_longue` (vrai si la session dure plus de 15 min) |
+| 15 premières minutes (modèle 2) | `temp_15min`, `vitesse_temp_15min`, `courant_moyen_15min`, `ecart_v_max_15min`, `soc_15min`, `session_longue` |
 
-- [ ] Livrer **d'abord une version sur 2 véhicules** pour débloquer les autres, puis la version complète
-
-### 🅳 Dataset externe Zhang et al. (`src/external_zhang.py`)
-- [x] `data/external/zhang_extraits.parquet` déjà produit (700 582 extraits, 347 véhicules, 55 en panne) → dans le dépôt
+### 🅳 Dataset Zhang (`src/external_zhang.py`)
+- [x] `data/external/zhang_extraits.parquet` produit (700 582 extraits, 347 véhicules, 55 en panne) et dans le dépôt
 - [ ] Intégrer le script d'export dans `src/external_zhang.py` (lecteur **sécurisé** : `numpy` et `OrderedDict` uniquement), pour que le fichier soit reproductible
 - [ ] Un test : le lecteur refuse un pickle qui appelle une fonction interdite
 
 ### Ensuite
 - [ ] Aider Ivan Jr sur le tuning des modèles et l'analyse des erreurs
-
-**Livrable :** `sessions_features.parquet` + la partie « Nettoyage et sessions » du rapport.
+- [ ] Rédiger la partie « Données, nettoyage et sessions » du rapport
 
 ---
 
 ## 🟩 Mohamed — Analyse, seuils, vote, dashboard (branche `MOHAMED`)
 
 ### Étape 4 — Analyse exploratoire (`notebooks/02_exploration.ipynb`)
-- [ ] Distribution de `temp_max` et de `ecart_tension` : histogrammes, percentiles 99 % et 99,9 % (justifie les seuils 45 °C, 48 °C, 0,1 V)
+- [ ] ⭐ Distribution de `temp_max`, `ecart_v_moyen` et `ecart_v_max` par session : histogrammes, percentiles 99 % et 99,9 % (justifie 45/48 °C et 60/100 mV)
 - [ ] Température selon le mois (effet été/hiver) et selon le courant
-- [ ] Comparaison des 20 véhicules (boxplots)
+- [ ] Comparaison des 20 véhicules (boxplots) — montrer que le **véhicule 9** se détache sur l'écart de tension
 - [ ] Graphiques enregistrés dans `reports/figures/` pour le rapport
 
 ### Seuils et vote (`src/models/seuils.py`, `src/models/fusion.py`)
-- [ ] Coder `vote_sessions(sessions)` : 1 si `temp_max` > 45 ou `ecart_v_max` > 0,1, sinon 0
-- [ ] Produire les **étiquettes** pour Ivan Jr : colonnes `label_surchauffe` et `label_cellule`
-- [ ] Trancher avec l'équipe : un vote global, ou un vote par anomalie (recommandé) → adapter `fusion.py`
+- [ ] Coder `vote_sessions(sessions)` **par anomalie** :
+  - surchauffe : alerte si `temp_max` > 45, critique si ≥ 48
+  - 🅳 cellule : alerte si `ecart_v_max` > 60 mV, critique si > 100 mV (tester aussi `ecart_v_moyen`)
+- [ ] Produire l'**étiquette** pour Ivan Jr : colonne `label_surchauffe` (🅳 plus besoin de `label_cellule`)
+- [ ] 🅳 Adapter `fusion.py` : vote par anomalie, **4 votes pour la surchauffe, 3 pour la cellule**
+- [ ] `config.py` : ajouter `ECART_TENSION_ALERTE = 0.06` (prévenir le groupe)
 
 ### Étape 8 — Dashboard (`dashboard/app.py`, lancer avec `streamlit run dashboard/app.py`)
+- [ ] Commencer avec des **votes fictifs**, brancher les vrais résultats ensuite
 - [ ] Page « Flotte » : classement des 20 véhicules par score 0-100
 - [ ] Page « Véhicule » : historique des sessions avec le niveau 🟢 / 🟠 / 🔴, filtres par période
 - [ ] Détail d'une session : quelles approches ont voté anomalie, et pourquoi
-- [ ] Commencer avec des **votes fictifs**, brancher les vrais résultats ensuite
-- [ ] 🅳 Page « Validation sur vraies pannes » : écart de tension des véhicules en panne vs normaux (Zhang), AUROC, rappel de la règle 60/100 mV
-- [ ] 🅳 (options C et D) Page « Véhicule 9 » : évolution de son écart de tension dans le temps
+- [ ] Page « Véhicule 9 » : évolution de son écart de tension dans le temps
+- [ ] 🅳 Page « Validation sur vraies pannes » : écart moyen en panne vs normaux (Zhang), AUROC par marque, résultats d'Ivan Jr
 
-**Livrables :** graphiques, étiquettes pour le modèle 2, fusion par vote, dashboard.
+**Livrables :** graphiques, étiquette `label_surchauffe`, fusion par vote, dashboard.
 
 ---
 
 ## 🟨 Ivan Jr — ML supervisé (branche `IVANJR`)
 
 ### Pour tous les modèles
-- [ ] Séparation train/test **par véhicule** (`config.TEST_VEHICLES`)
+- [ ] Séparation train/test **par véhicule** (`config.TEST_VEHICLES` ; sur Zhang : colonne `split`)
 - [ ] Chaque entraînement enregistré dans **MLflow** (avec la fonction `log_run` de Stevy)
-- [ ] En attendant les sessions de Kevin : travailler sur un faux tableau avec les mêmes colonnes
 
-### Modèle 1 — Régression (`src/models/regression.py`) — 6 entraînements
+### ⭐ 🅳 Validation cellule sur vraies pannes (`src/models/cellule_zhang.py`) — à faire en premier (ne dépend de personne)
+- [ ] Charger `data/external/zhang_extraits.parquet`, agréger **par véhicule** : écart moyen, 99e percentile, max, nombre d'extraits
+- [ ] Évaluer la règle simple « écart moyen > seuil » : rappel, précision, AUROC, **par marque**
+- [ ] Classifieur Random Forest / XGBoost sur les vraies étiquettes, entraîné sur `split == "train"`, testé sur `split == "test"` (marques 1 et 2 ; marque 3 n'a qu'un dossier `data`)
+- [ ] Signaler les limites : étiquettes par véhicule, ≈ 6× moins d'extraits pour les véhicules en panne, marque 3 non séparée (AUROC 0,57), seuils non transférables aux BAIC
+
+### Modèle 1 — Régression (`src/models/regression.py`) — 6 entraînements (après le merge des sessions)
 - [ ] Entrées : `courant_moyen`, `soc_debut`, `temp_debut`, `mois`, `duree_min`
 - [ ] Cible A : `temp_max` — Cible B : `ecart_v_max`
 - [ ] Algorithmes : régression linéaire (référence), Random Forest, XGBoost — pour chaque cible
 - [ ] Métriques : MAE, RMSE, R² dans un tableau comparatif
 - [ ] `vote_sessions` : 1 si (réel − prévu) dépasse un seuil (ex. 99e percentile des résidus) — justifier ce choix
 
-### Modèle 2 — Alerte précoce (`src/models/alerte_precoce.py`) — 4 entraînements
-- [ ] Entrées : **uniquement** les colonnes `*_15min`, sur les sessions longues
-- [ ] Cibles : `label_surchauffe` et `label_cellule` (fournies par Mohamed)
-- [ ] Algorithmes : Random Forest, XGBoost en classification, `class_weight="balanced"` (peu d'anomalies)
-- [ ] Métriques : précision, rappel, F1, matrice de confusion — **le rappel est prioritaire**
+### Modèle 2 — Alerte précoce (`src/models/alerte_precoce.py`) — surchauffe uniquement 🅳
+- [ ] Entrées : **uniquement** les colonnes `*_15min`, sur les sessions longues (`session_longue`)
+- [ ] Cible : `label_surchauffe` (fournie par Mohamed ; en attendant, la calculer : `temp_max > 45`)
+- [ ] Algorithmes : Random Forest, XGBoost en classification, `class_weight="balanced"` / `scale_pos_weight`
+- [ ] Métriques : précision, rappel, F1, PR-AUC, matrice de confusion — **le rappel est prioritaire**
 - [ ] Ajuster le seuil de probabilité pour favoriser le rappel
 
-> Options C et D : le modèle 2 **cellule** est retiré (90 % des cas viennent du véhicule 9) → **8 entraînements** au lieu de 10.
-
-### 🅳 Cellule sur vraies pannes (`src/models/cellule_zhang.py`)
-- [ ] Entrée : `data/external/zhang_extraits.parquet` (Kevin), agrégé **par véhicule** (écart moyen, 99e percentile, max)
-- [ ] Évaluer notre règle (alerte 60 mV / critique 100 mV) : rappel, précision, AUROC
-- [ ] Classifieur Random Forest / XGBoost sur les vraies étiquettes, séparation **par véhicule** (`train_label.csv` / `test_label.csv`)
-- [ ] Signaler les limites : étiquettes par véhicule, véhicules en panne avec ≈ 6× moins d'extraits, seuils non transférables aux BAIC
-
-**Livrable :** tableau des modèles, meilleur modèle par cible, importance des variables (graphique) + 🅳 résultats de validation sur vraies pannes.
+**Livrables :** tableau des 8 modèles BAIC, meilleur modèle par cible, importance des variables (graphique) + résultats de validation sur vraies pannes (Zhang).
 
 ---
 
@@ -149,22 +159,22 @@ Règles pour ce dataset :
 
 > **À commencer tout de suite :** MLflow, Docker et la CI ne dépendent pas des sessions.
 
-### Modèle 3 — Isolation Forest (`src/models/isolation_forest.py`)
-- [ ] Entrées : toutes les features de session, normalisées (`StandardScaler`)
-- [ ] Sortie : score de bizarrerie par session + `vote_sessions` (1 si atypique)
-- [ ] Choisir et justifier `contamination` (ex. 1 % ou 2 %)
-- [ ] **Évaluation :** injecter de fausses anomalies dans des sessions normales (`temp_max` + 8 °C, `ecart_v_max` + 60 mV) et mesurer le pourcentage retrouvé
-
 ### Étape 7 — MLflow et Docker
-- [ ] Mettre en place MLflow et écrire une fonction `log_run(...)` utilisée par tout le monde
-- [ ] Enregistrer les 5 modèles finaux dans le **Model Registry**
+- [ ] ⭐ Mettre en place MLflow et écrire une fonction `log_run(...)` utilisée par tout le monde (à livrer tôt : Ivan Jr en a besoin)
 - [ ] `Dockerfile` : installe `requirements.txt` et lance le dashboard
+- [ ] Enregistrer les modèles finaux dans le **Model Registry**
 
 ### Étape 9 — CI/CD et monitoring
 - [ ] `.github/workflows/ci.yml` : à chaque push → installation → `pytest` → build Docker
 - [ ] Bonus **Evidently** : rapport de dérive entre 2019-2020 et 2021 sur `temp_max` et `ecart_v_max`
+
+### Modèle 3 — Isolation Forest (`src/models/isolation_forest.py`) — après le merge des sessions
+- [ ] Entrées : toutes les features de session, normalisées (`StandardScaler`)
+- [ ] Sortie : score de bizarrerie par session + `vote_sessions` (1 si atypique)
+- [ ] Choisir et justifier `contamination` (ex. 1 % ou 2 %)
+- [ ] **Évaluation :** injecter de fausses anomalies dans des sessions normales (`temp_max` + 8 °C, `ecart_v_max` + 60 mV) et mesurer le pourcentage retrouvé
+- [ ] Vérifier qu'il repère bien le **véhicule 9**
 - [ ] 🅳 Suivre dans MLflow l'expérience « cellule_zhang » d'Ivan Jr
-- [ ] 🅳 Isolation Forest : vérifier qu'il repère bien le véhicule 9
 
 **Livrables :** modèle 3 évalué, MLflow, Docker, CI GitHub Actions.
 
@@ -173,19 +183,19 @@ Règles pour ce dataset :
 ## Qui attend quoi
 
 ```
-Kevin ───── sessions_features.parquet ─────► Ivan Jr, Stevy, Mohamed
-Mohamed ─── étiquettes (seuils) ───────────► Ivan Jr (modèle 2)
-Stevy ───── log_run MLflow ────────────────► Ivan Jr
-Ivan Jr + Stevy + Mohamed ── votes ────────► Mohamed (fusion + dashboard)
-🅳 Kevin ── zhang_extraits.parquet ────────► Ivan Jr (cellule_zhang) ──► Mohamed (page validation)
+Kevin ───── PR kevin → main (sessions_features.parquet) ──► Ivan Jr, Stevy, Mohamed   ← BLOQUANT
+Stevy ───── log_run MLflow ──────────────────────────────► Ivan Jr
+Mohamed ─── label_surchauffe ────────────────────────────► Ivan Jr (modèle 2)
+Ivan Jr + Stevy + Mohamed ── votes ──────────────────────► Mohamed (fusion + dashboard)
+Ivan Jr ─── résultats cellule_zhang ─────────────────────► Mohamed (page validation)
 ```
 
 ## Ordre de travail
 
 | Phase | Kevin | Mohamed | Ivan Jr | Stevy |
 |---|---|---|---|---|
-| **1. En parallèle** | Sessions + features (priorité) | Analyse exploratoire | Code des modèles sur faux tableau | MLflow, Docker, CI |
-| **2. Sessions livrées** | Aide Ivan Jr | Vote des seuils, étiquettes, début dashboard | Entraîne les 10 modèles | Isolation Forest + anomalies simulées |
-| **3. Intégration** | Rapport | Fusion des 4 votes, dashboard final | Rapport + choix des modèles | Registry MLflow, Docker final, Evidently |
+| **1. Maintenant** | PR `kevin` → `main`, sessions > 12 h | Analyse exploratoire, vote du seuil | Validation cellule sur Zhang | MLflow (`log_run`), Docker, CI |
+| **2. Sessions sur `main`** | `external_zhang.py`, aide Ivan Jr | Vote des seuils, `label_surchauffe`, début dashboard | Modèles 1 et 2 (8 entraînements) | Isolation Forest + anomalies simulées |
+| **3. Intégration** | Rapport (données) | Fusion des votes, dashboard final | Rapport + choix des modèles | Registry MLflow, Docker final, Evidently |
 
 Point d'équipe **une fois par semaine** : où en est chacun, qui est bloqué.
