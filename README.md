@@ -41,7 +41,7 @@ Avec 0,1 V, **aucune** session BAIC n'est une cellule défaillante. Les options 
 | | |
 |---|---|
 | Source | Zhang et al., 2023 — figshare `10.6084/m9.figshare.23659323` |
-| Fichier à utiliser | **`data/external/zhang_extraits.parquet`** (10,6 Mo, **non versionné**) → à récupérer sur le Drive de l'équipe et à copier dans `data/external/` |
+| Fichier à utiliser | **`data/external/zhang_extraits.parquet`** (10,6 Mo) → **déjà dans le dépôt**, récupéré avec `git pull` (source et licence CC BY 4.0 : [data/external/LISEZMOI.md](data/external/LISEZMOI.md)) |
 | Contenu | 700 582 extraits (1 ligne = 1 extrait de 128 mesures), **347 véhicules dont 55 en panne**, 3 marques |
 | Colonnes | `marque`, `split`, `car`, `label` (1 = panne), `ecart_moy_mV`, `ecart_max_mV`, `temp_max`, `dtemp`, `courant_moy`, `soc_debut` |
 | Données brutes | 7 Go de `.pkl` : **inutile de les télécharger**. Si besoin, lecture uniquement avec le lecteur sécurisé (**jamais** `pickle.load` / `torch.load`) |
@@ -74,7 +74,7 @@ vehicules = z.groupby(["marque", "car"], observed=True).agg(label=("label", "fir
 Dataset_automobile/
 ├── data/raw/              # #1.csv … #20.csv (versionnés via Git LFS)
 ├── data/processed/        # parquet fusionné, nettoyé, sessions (non versionnés)
-├── data/external/         # dataset Zhang et al. (option D, non versionné)
+├── data/external/         # résumé du dataset Zhang et al. (option D) : zhang_extraits.parquet
 ├── notebooks/             # exploration et présentation des résultats
 ├── src/
 │   ├── config.py          # chemins, seuils, paramètres

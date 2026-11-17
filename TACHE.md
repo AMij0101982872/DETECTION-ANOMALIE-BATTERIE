@@ -46,7 +46,8 @@ Lire [DECISION_SEUIL_CELLULE.md](DECISION_SEUIL_CELLULE.md) et **voter** (A, B, 
 Les tâches marquées **🅳** ne s'appliquent que si l'**option D** est retenue : validation de l'indicateur « cellule » sur les **vraies pannes** du dataset Zhang et al. (*Nature Communications*, 2023, figshare `10.6084/m9.figshare.23659323`).
 
 Règles pour ce dataset :
-- Il va dans `data/external/` (**jamais sur GitHub**, 7 Go — dossier déjà dans `.gitignore`).
+- Le résumé **`data/external/zhang_extraits.parquet`** (10 Mo) est **dans le dépôt** : `git pull origin main` suffit. Les données brutes (7 Go de `.pkl`) ne vont **jamais** sur GitHub.
+- Licence CC BY 4.0 : **citer Zhang et al. 2023** (voir `data/external/LISEZMOI.md`).
 - Les fichiers `.pkl` sont dangereux : **jamais** `pickle.load` ni `torch.load` directement, uniquement le lecteur restreint de `src/external_zhang.py`.
 - Il sert **uniquement pour la cellule** (la température n'y sépare pas les pannes) et on **ne le fusionne pas** avec les BAIC.
 
@@ -75,7 +76,7 @@ Règles pour ce dataset :
 - [ ] Livrer **d'abord une version sur 2 véhicules** pour débloquer les autres, puis la version complète
 
 ### 🅳 Dataset externe Zhang et al. (`src/external_zhang.py`)
-- [x] `data/external/zhang_extraits.parquet` déjà produit (700 582 extraits, 347 véhicules, 55 en panne) → partagé sur le Drive
+- [x] `data/external/zhang_extraits.parquet` déjà produit (700 582 extraits, 347 véhicules, 55 en panne) → dans le dépôt
 - [ ] Intégrer le script d'export dans `src/external_zhang.py` (lecteur **sécurisé** : `numpy` et `OrderedDict` uniquement), pour que le fichier soit reproductible
 - [ ] Un test : le lecteur refuse un pickle qui appelle une fonction interdite
 
