@@ -1,3 +1,4 @@
+
 """Étape 7 — Suivi des expériences avec MLflow (membre 4).
 
 Utilisation (par tout le monde) :
@@ -35,7 +36,10 @@ ARTIFACTS_DIR = ROOT_DIR / "mlartifacts"
 # déclarer les types internes autorisés. Ceux-ci sont ceux des modèles à base d'arbres
 # (Random Forest, Isolation Forest...) que nous entraînons nous-mêmes. N'ajouter un type
 # qu'après avoir vérifié d'où il vient (jamais la liste complète proposée par l'erreur).
-TYPES_SKOPS_CONFIANCE = ["sklearn.tree._tree.Tree", "numpy.dtype"]
+TYPES_SKOPS_CONFIANCE = [
+    "sklearn.tree._tree.Tree", "numpy.dtype",
+    "src.models.isolation_forest.EcretageBas",   # notre étape d'écrêtage (modèle 3)
+]
 
 
 def configurer_mlflow():

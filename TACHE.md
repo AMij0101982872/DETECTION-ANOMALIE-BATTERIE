@@ -169,20 +169,24 @@ Fichier : `src/models/alerte_precoce.py` + `notebooks/04_modele2_alerte_precoce.
 - [x] MLflow + `log_run(...)` dans `src/mlops.py` (branche `STEVY`)
 - [ ] ⭐ **Ouvrir la Pull Request `STEVY` → `main`** : Ivan Jr et Mohamed en ont besoin
 - [x] `Dockerfile` : installe `requirements.txt` et lance le dashboard (branche `STEVY`)
-- [ ] Enregistrer les modèles finaux dans le **Model Registry**
+- [x] Modèle 3 inscrit dans le **Model Registry** (`isolation_forest`, rechargé à l'identique)
+- [ ] Inscrire aussi les modèles finaux d'Ivan Jr (après son choix des modèles)
 
 ### Étape 9 — CI/CD et monitoring
 - [x] `.github/workflows/ci.yml` : à chaque push → installation → `pytest` → build Docker (branche `STEVY`)
-- [ ] Bonus **Evidently** : rapport de dérive entre 2019-2020 et 2021 sur `temp_max` et `ecart_v_max`
+- [ ] Bonus **Evidently** : rapport de dérive entre 2019-2020 et 2021 sur `temp_max` et `ecart_v_max` (exemples tout trouvés : vieillissement de la flotte +9 mV, véhicule 9)
 
-### Modèle 3 — Isolation Forest (`src/models/isolation_forest.py`) — premier jet sur la branche `STEVY`
-- [ ] Entrées : toutes les features de session, normalisées (`StandardScaler`)
-- [x] Sortie : score de bizarrerie par session + `vote_sessions` (1 si atypique)
-- [ ] Écrire les votes dans `data/processed/votes_isolation_forest.parquet` (voir « Contrat des votes »)
-- [x] `contamination` = 2 % (à justifier dans le rapport)
-- [ ] **Évaluation :** injecter de fausses anomalies dans des sessions normales (`temp_max` + 8 °C, `ecart_v_max` + 60 mV) et mesurer le pourcentage retrouvé
-- [ ] Vérifier qu'il repère bien le **véhicule 9**
+### Modèle 3 — Isolation Forest unilatéral (`src/models/isolation_forest.py`) — ✅ terminé
+Démarche, hypothèses et résultats : [notebooks/04_modele3_isolation_forest.ipynb](notebooks/04_modele3_isolation_forest.ipynb)
+- [x] Entrées : `temp_max`, `vitesse_temp`, `ecart_v_max` — **pas** toutes les features : 10 colonnes diluent le signal (rappel 7 % contre 88 %), `ecart_v_moyen` est redondant
+- [x] Écrêtage unilatéral à la médiane : seules les valeurs **hautes** votent (38 % des votes venaient de valeurs basses sans danger)
+- [x] `contamination` = 2 % (justifiée : +30 points de rappel de 1 à 2 %, +1,7 de 2 à 3 %)
+- [x] Sessions < 5 min non évaluables (artefacts) : vote 0 et `if_evaluable` = faux
+- [x] Votes dans `data/processed/votes_isolation_forest.parquet` (voir « Contrat des votes »)
+- [x] **Évaluation** par anomalies injectées : surchauffe +6 °C → 75 % (seuils 23 %), cellule +30 mV → 93 %, combinée +4 °C et +20 mV → 83 % (seuils 63 %), fausses alarmes 1,5 %
+- [x] **Véhicule 9** : 1ᵉʳ / 20 (14 % de ses sessions), suit sa dégradation de 2021
 - [ ] 🅳 Suivre dans MLflow l'expérience « cellule_zhang » d'Ivan Jr
+- [ ] Signaler à Kevin : `main.py` n'applique pas `filtrer_sessions_courtes` (180 sessions de moins de 10 mesures)
 
 **Livrables :** modèle 3 évalué, MLflow, Docker, CI GitHub Actions.
 
@@ -197,7 +201,7 @@ Chaque approche écrit **un fichier de votes**, une ligne par session, avec `veh
 | Seuils (Mohamed) | `data/processed/votes_seuils.parquet` | `vote_seuils_surchauffe`, `vote_seuils_cellule` | les deux | à faire |
 | Modèle 1 (Ivan Jr) | `data/processed/votes_regression.parquet` | `vote_regression_surchauffe`, `vote_regression_cellule` | les deux | ✅ sur `main` |
 | Modèle 2 (Ivan Jr) | `data/processed/votes_alerte_precoce.parquet` | `vote_alerte_precoce_surchauffe` | surchauffe | à faire |
-| Modèle 3 (Stevy) | `data/processed/votes_isolation_forest.parquet` | `vote_isolation_forest` | les deux (un seul vote) | à écrire |
+| Modèle 3 (Stevy) | `data/processed/votes_isolation_forest.parquet` | `vote_isolation_forest` (+ `if_evaluable`, `score_isolation_forest`, `raison_isolation_forest` pour le dashboard) | les deux (un seul vote) | ✅ branche `STEVY` (PR) |
 
 Fusion (option D) : **surchauffe = 4 votes** (seuils, modèle 1, modèle 2, modèle 3) · **cellule = 3 votes** (seuils, modèle 1, modèle 3).
 
