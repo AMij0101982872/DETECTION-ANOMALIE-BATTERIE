@@ -142,22 +142,22 @@ git pull origin main                  # récupérer ce que les autres ont déjà
 - [x] 3 tests (`tests/test_regression.py`), 9 graphiques (`reports/figures/regression_*.png`)
 - [ ] Enregistrer les runs dans MLflow quand `log_run` (Stevy) sera sur `main` (le code l'appelle déjà automatiquement)
 
-### ⭐ Modèle 2 — Alerte précoce : prochaine tâche
+### ✅ Modèle 2 — Alerte précoce (`src/models/alerte_precoce.py`, `notebooks/05_modele2_alerte_precoce.ipynb`) — surchauffe uniquement 🅳
+- [x] Population : sessions > 15 min pas encore > 45 °C à 15 min (30 216 sessions, 295 surchauffes, 1 %) ; déjà > 45 °C à 15 min → vote 1 ; < 15 min → vote 0
+- [x] Entrées : uniquement ce qui est connu à 15 min (`*_15min` + `temp_debut`, `soc_debut`, `mois`)
+- [x] Référence (règle `temp_15min` ≥ 42 °C), Random Forest, XGBoost, classes rééquilibrées → **XGBoost** (PR-AUC en validation croisée)
+- [x] Seuil de probabilité choisi par F2 (rappel prioritaire) en validation croisée par véhicule
+- [x] Test : **49 surchauffes sur 53 détectées (rappel 92 %)**, précision 59 %, PR-AUC 0,88 (règle : rappel 72 %, précision 22 %)
+- [x] Avance : l'alerte tombe **≈ 33 min (médiane) avant** le passage à 45 °C
+- [x] Votes dans `data/processed/votes_alerte_precoce.parquet`, 3 tests (`tests/test_alerte_precoce.py`)
 
-Fichier : `src/models/alerte_precoce.py` + `notebooks/04_modele2_alerte_precoce.ipynb` — surchauffe uniquement 🅳
-- [ ] Entrées : **uniquement** les colonnes `*_15min`, sur les sessions longues (`session_longue`)
-- [ ] Cible : `label_surchauffe` (fournie par Mohamed ; en attendant, la calculer : `temp_max > 45`)
-- [ ] Algorithmes : Random Forest, XGBoost en classification, `class_weight="balanced"` / `scale_pos_weight`
-- [ ] Métriques : précision, rappel, F1, PR-AUC, matrice de confusion — **le rappel est prioritaire**
-- [ ] Ajuster le seuil de probabilité pour favoriser le rappel
-
-### 🅳 Validation cellule sur vraies pannes (`src/models/cellule_zhang.py`) — après le modèle 2
+### ⭐ 🅳 Validation cellule sur vraies pannes (`src/models/cellule_zhang.py`) — après le modèle 2
 - [ ] Charger `data/external/zhang_extraits.parquet`, agréger **par véhicule** : écart moyen, 99e percentile, max, nombre d'extraits
 - [ ] Évaluer la règle simple « écart moyen > seuil » : rappel, précision, AUROC, **par marque**
 - [ ] Classifieur Random Forest / XGBoost sur les vraies étiquettes, entraîné sur `split == "train"`, testé sur `split == "test"` (marques 1 et 2 ; marque 3 n'a qu'un dossier `data`)
 - [ ] Signaler les limites : étiquettes par véhicule, ≈ 6× moins d'extraits pour les véhicules en panne, marque 3 non séparée (AUROC 0,57), seuils non transférables aux BAIC
 
-**Livrables :** ✅ modèle 1 · tableau des 8 modèles BAIC, meilleur modèle par cible, importance des variables (graphique) + résultats de validation sur vraies pannes (Zhang).
+**Livrables :** ✅ modèle 1 · ✅ modèle 2 · tableau des 8 modèles BAIC, meilleur modèle par cible, importance des variables (graphique) + résultats de validation sur vraies pannes (Zhang).
 
 ---
 
@@ -200,7 +200,7 @@ Chaque approche écrit **un fichier de votes**, une ligne par session, avec `veh
 |---|---|---|---|---|
 | Seuils (Mohamed) | `data/processed/votes_seuils.parquet` | `vote_seuils_surchauffe`, `vote_seuils_cellule` | les deux | à faire |
 | Modèle 1 (Ivan Jr) | `data/processed/votes_regression.parquet` | `vote_regression_surchauffe`, `vote_regression_cellule` | les deux | ✅ sur `main` |
-| Modèle 2 (Ivan Jr) | `data/processed/votes_alerte_precoce.parquet` | `vote_alerte_precoce_surchauffe` | surchauffe | à faire |
+| Modèle 2 (Ivan Jr) | `data/processed/votes_alerte_precoce.parquet` | `vote_alerte_precoce_surchauffe` (+ `proba_alerte_precoce`, `ap_evaluable`, `raison_alerte_precoce`) | surchauffe | ✅ branche `IVANJR` |
 | Modèle 3 (Stevy) | `data/processed/votes_isolation_forest.parquet` | `vote_isolation_forest` (+ `if_evaluable`, `score_isolation_forest`, `raison_isolation_forest` pour le dashboard) | les deux (un seul vote) | ✅ branche `STEVY` (PR) |
 
 Fusion (option D) : **surchauffe = 4 votes** (seuils, modèle 1, modèle 2, modèle 3) · **cellule = 3 votes** (seuils, modèle 1, modèle 3).
