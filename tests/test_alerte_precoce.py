@@ -45,7 +45,7 @@ def test_separation_par_vehicule():
 def test_entrainement_et_votes():
     df = _sessions()
     resultats, modele, seuil = entrainer(df, journaliser=False, verbose=False)
-    assert set(resultats["approche"]) == {"regle_temp_15min", "random_forest", "xgboost"}
+    assert set(resultats["approche"]) == {"regle_temp_15min", "regression_logistique", "random_forest", "xgboost"}
     assert resultats["meilleur"].sum() == 1
     assert resultats.loc[resultats.meilleur, "rappel_test"].iloc[0] > 0.8
 

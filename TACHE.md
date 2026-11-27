@@ -145,10 +145,11 @@ git pull origin main                  # récupérer ce que les autres ont déjà
 ### ✅ Modèle 2 — Alerte précoce (`src/models/alerte_precoce.py`, `notebooks/05_modele2_alerte_precoce.ipynb`) — surchauffe uniquement 🅳
 - [x] Population : sessions > 15 min pas encore > 45 °C à 15 min (30 216 sessions, 295 surchauffes, 1 %) ; déjà > 45 °C à 15 min → vote 1 ; < 15 min → vote 0
 - [x] Entrées : uniquement ce qui est connu à 15 min (`*_15min` + `temp_debut`, `soc_debut`, `mois`)
-- [x] Référence (règle `temp_15min` ≥ 42 °C), Random Forest, XGBoost, classes rééquilibrées → **XGBoost** (PR-AUC en validation croisée)
+- [x] Règle de référence (`temp_15min` ≥ 42 °C), régression logistique, Random Forest, XGBoost ; classes pondérées ; hyperparamètres par GridSearch (GroupKFold) → **régression logistique** retenue (meilleure PR-AUC en validation croisée : 0,83, la plus simple)
 - [x] Seuil de probabilité choisi par F2 (rappel prioritaire) en validation croisée par véhicule
-- [x] Test : **49 surchauffes sur 53 détectées (rappel 92 %)**, précision 59 %, PR-AUC 0,88 (règle : rappel 72 %, précision 22 %)
-- [x] Avance : l'alerte tombe **≈ 33 min (médiane) avant** le passage à 45 °C
+- [x] Test : **46 surchauffes sur 53 détectées (rappel 87 %)**, précision 61 %, 29 fausses alertes (règle : rappel 72 %, précision 22 %, 138 fausses alertes)
+- [x] Avance : l'alerte tombe **≈ 32 min (médiane) avant** le passage à 45 °C
+- [x] Notebook académique : EDA, fuite de données, déséquilibre, baselines, validation croisée, GridSearch, analyse des erreurs, coefficients et importance par permutation
 - [x] Votes dans `data/processed/votes_alerte_precoce.parquet`, 3 tests (`tests/test_alerte_precoce.py`)
 
 ### ⭐ 🅳 Validation cellule sur vraies pannes (`src/models/cellule_zhang.py`) — après le modèle 2

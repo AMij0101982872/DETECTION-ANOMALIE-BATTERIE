@@ -7,8 +7,9 @@ prévoir qu'elle finira en surchauffe (temp_max > 45 °C) ?
 - Population : sessions de plus de 15 min dont la température n'a pas encore dépassé 45 °C
   à la 15e minute (sinon il n'y a plus rien à anticiper : ces sessions votent 1 directement).
 - Entrées : uniquement ce qui est connu à la 15e minute (colonnes *_15min + conditions de départ).
-- Algorithmes : Random Forest et XGBoost en classification, classes rééquilibrées
-  (≈ 1 % de positifs) ; une règle simple sur temp_15min sert de référence.
+- Algorithmes : régression logistique, Random Forest et XGBoost en classification, classes
+  rééquilibrées (≈ 1 % de positifs) ; une règle simple sur temp_15min sert de référence.
+  Retenu : la régression logistique (meilleure PR-AUC en validation croisée, la plus simple).
 - Choix du modèle (PR-AUC) et du seuil de probabilité (F2 : le rappel compte double) par
   validation croisée par véhicule sur le train, jamais sur le test.
 
@@ -17,6 +18,9 @@ Utilisation : python -m src.models.alerte_precoce
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (average_precision_score, confusion_matrix, f1_score, fbeta_score,
                              precision_recall_curve, precision_score, recall_score, roc_auc_score)
 from sklearn.model_selection import GroupKFold, cross_val_predict
@@ -62,13 +66,19 @@ def separer(pop):
 
 
 def algorithmes(y_train):
-    """Random Forest et XGBoost, rééquilibrés pour ≈ 1 % de positifs."""
+    """Régression logistique, Random Forest et XGBoost, rééquilibrés pour ≈ 1 % de positifs.
+
+    Hyperparamètres retenus par recherche en grille (GroupKFold, PR-AUC), voir le notebook 05 :
+    régression logistique C = 1 ; XGBoost max_depth = 3, n_estimators = 200.
+    """
     ratio = float((y_train == 0).sum() / max((y_train == 1).sum(), 1))
     return {
+        "regression_logistique": make_pipeline(
+            StandardScaler(), LogisticRegression(C=1.0, class_weight="balanced", max_iter=5000)),
         "random_forest": RandomForestClassifier(n_estimators=300, min_samples_leaf=5,
                                                 class_weight="balanced_subsample", n_jobs=-1,
                                                 random_state=RANDOM_STATE),
-        "xgboost": XGBClassifier(n_estimators=300, max_depth=4, learning_rate=0.05, subsample=0.8,
+        "xgboost": XGBClassifier(n_estimators=200, max_depth=3, learning_rate=0.05, subsample=0.8,
                                  scale_pos_weight=ratio, eval_metric="aucpr", n_jobs=-1,
                                  random_state=RANDOM_STATE),
     }
@@ -168,7 +178,12 @@ def minutes_avant_surchauffe(sessions):
 
 
 def importance_variables(modele):
-    return pd.Series(modele.feature_importances_, index=FEATURES).sort_values(ascending=False)
+    """Importance des arbres, ou |coefficient| standardisé pour la régression logistique."""
+    if hasattr(modele, "feature_importances_"):
+        valeurs = modele.feature_importances_
+    else:
+        valeurs = np.abs(modele[-1].coef_[0])
+    return pd.Series(valeurs, index=FEATURES).sort_values(ascending=False)
 
 
 def _journaliser(nom, modele, m_cv, m_te, seuil, exemple):
