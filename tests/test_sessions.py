@@ -1,6 +1,13 @@
 import pandas as pd
+import pytest
 
-from src.sessions import ajouter_session_id, features_par_session
+from src.config import SESSIONS_PARQUET
+from src.sessions import (
+    MIN_MESURES,
+    ajouter_session_id,
+    features_par_session,
+    filtrer_sessions_courtes,
+)
 
 
 def _mesures(vehicle_id, debut, n, pas_s=8):
@@ -38,3 +45,23 @@ def test_features_une_ligne_par_session():
     assert ligne["courant_max"] == 50.0           # valeur absolue
     assert round(ligne["ecart_v_max"], 2) == 0.05
     assert bool(ligne["session_longue"]) is True
+
+
+def test_filtre_ecarte_les_sessions_trop_courtes():
+    longue = _mesures(1, "2019-07-26 20:00:00", MIN_MESURES + 10)
+    courte = _mesures(1, "2019-07-26 21:00:00", MIN_MESURES - 1)   # 1 h plus tard
+    df = ajouter_session_id(pd.concat([longue, courte], ignore_index=True))
+    assert df["session_id"].nunique() == 2
+
+    filtre = filtrer_sessions_courtes(df)
+    assert filtre["session_id"].nunique() == 1
+    assert len(filtre) == MIN_MESURES + 10
+
+
+def test_pipeline_principal_sans_sessions_courtes():
+    """Le parquet produit par main.py ne doit pas contenir de session trop courte."""
+    try:
+        s = pd.read_parquet(SESSIONS_PARQUET)
+    except FileNotFoundError:
+        pytest.skip("lancer python main.py d'abord")
+    assert (s["nb_mesures"] >= MIN_MESURES).all()
