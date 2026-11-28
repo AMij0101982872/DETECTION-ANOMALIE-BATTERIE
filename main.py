@@ -6,7 +6,7 @@ Les étapes non encore codées lèvent NotImplementedError.
 from src import config
 from src.cleaning import nettoyer
 from src.data_loading import fusionner_csv
-from src.sessions import ajouter_session_id, features_par_session
+from src.sessions import construire_sessions
 
 
 def main():
@@ -19,7 +19,7 @@ def main():
     df.to_parquet(config.CLEAN_PARQUET, index=False)
 
     print("Étape 5 : sessions et features")
-    sessions = features_par_session(ajouter_session_id(df))
+    sessions = construire_sessions(df)
     sessions.to_parquet(config.SESSIONS_PARQUET, index=False)
 
     print("Étape 6 : modèles + fusion par vote")
